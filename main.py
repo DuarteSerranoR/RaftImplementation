@@ -1,17 +1,25 @@
-# This is a sample Python script.
+import os
+from _socket import socket
+from replica import Replica
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# Parse replicas file
+replicasFile = open("replicas", "r").read().splitlines()
+
+# Store replicas variables
+replicas = []
+for replica in replicasFile:
+    replicas.append(Replica(replica))
+
+# Print existing replicas
+print("Current replicas:")
+for i in range(len(replicas)):
+    replicas[i].print(i)
+
+# Network
+# https://docs.python.org/3.8/howto/sockets.html
+
+# serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
-
+# replicas[]=
