@@ -6,4 +6,4 @@ class Replica:
         self.port = int(split_string[1])
 
     def print(self):
-        print("Replica " + str(self.id) + " -> " + self.host + ":" + str(self.port))
+        print("Replica " + str(self.id + 1) + " -> " + self.host + ":" + str(self.port))
