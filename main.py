@@ -27,12 +27,12 @@ for i in range(len(replicasFile)):
 # https://docs.python.org/3.8/howto/sockets.html
 network = Network()
 try:
-    network.Run(replicas, host, port)
+    network.StartServer(replicas, host, port)
 except Exception as ex:
     print("Error: %s" % ex)
 finally:
     try:
-        network.CloseConnections()
+        network.Dispose()
     except Exception as ex:
         print("Couldn't init network")
         print("Error: %s" % ex)

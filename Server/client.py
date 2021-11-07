@@ -1,19 +1,26 @@
 from socket import *
 
 
-def Client(host, port, message):
-    s = socket(AF_INET, SOCK_STREAM)
-    try:
+class Client:
+    def __init__(self, host, port):
+        self.alive = False
+        self.socket = socket(AF_INET, SOCK_STREAM)
         try:
             print("Creating client for replica " + host + ":" + str(port))
-            s.connect((host, port))
-            print("Sending message...")
-            s.sendall(message)
-            response = s.recv(1024).decode("utf-8")
-            print("Got replica's response " + response)
+            self.socket.connect((host, port))
+            self.alive = True
         except:
             print("Couldn't connect to replica " + host + ":" + str(port))
-        finally:
-            s.close()
-    except:
-        print("No need to close connection")
+
+    def SendMessage(self, requestLabel, requestData):
+        # TODO - fix me
+        message = requestData  # (requestLabel, requestData) #.encode()
+        print("Sending message...")
+        self.socket.sendall(message)
+        response = self.socket.recv(1024).decode("utf-8")
+        print("Got replica's response " + response)
+        return response
+
+    def Dispose(self):
+        self.socket.close()
+        self.alive = False
