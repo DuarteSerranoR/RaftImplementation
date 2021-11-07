@@ -18,6 +18,9 @@ class Server:
 
         while True:
             self.socketServer.listen(len(self.replicas))
+            # TODO - Use the replicas to connect sockets.
+            #  Also - will need to manage logs there, so it would be good to keep everything separate.
+            #  Check the exercise's recommended methods.
             (clientsocket, address) = self.socketServer.accept()
             message = clientsocket.recv(1024).decode("utf-8")
             if message != 'Message received':
