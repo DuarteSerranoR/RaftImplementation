@@ -22,8 +22,8 @@ class Replica:
     def Alive(self):
         return self.client.alive
 
-    def Invoke(self, requestLabel, requestData):
-        return self.client.SendMessage(requestLabel, requestData)
+    def Invoke(self, SenderId, requestLabel, requestData):
+        return self.client.SendMessage(SenderId, requestLabel, requestData)
 
     def Dispose(self):
         self.client.Dispose()

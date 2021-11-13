@@ -1,3 +1,4 @@
+import pickle
 from array import array
 from Models.replica import Replica
 from socket import *
@@ -29,45 +30,26 @@ class Server:
         print("Server listening...")
         while True:
             self.socketServer.listen(len(self.replicas))
-            # TODO - will need to manage logs there (replicas), so it would be good to keep everything separate.
-            #  Check the exercise's recommended methods.
             (clientsocket, address) = self.socketServer.accept()
-            message = clientsocket.recv(1024).decode("utf-8")
-            requestLabel = message
-            requestData = message
-            if requestLabel != 'Message received':
-                result = self.ProcessRequest(clientsocket, address, requestLabel, requestData)
-            # elif clientsocket.recv(1024):
+            message = clientsocket.recv(1024)
+            (SenderID, RequestLabel, RequestData) = pickle.loads(message)
+            # TODO - use ReplicaId to identify where the
+            #  request came from (to know who the leader
+            #  is)
 
-            # else:
-                # TODO - For logs - could send an 'ok' back. And if the other message didn't get the ok,
-                #  it would keep sending (while not ok - with socket to listening
-                #  [threading problems - use server socket and global vars])
+            # TODO - change the tuple on the sending of the message too
+            Result = self.MajorityInvoke(RequestLabel, RequestData)
+            Result = self.processRequest(SenderID, RequestLabel, RequestData)
 
             if self.signal:
                 break
 
-    def ProcessRequest(self, clientsocket, address, requestLabel, requestData):
-        print("Received message from replica " + str(address))
-        print("Request: " + requestLabel)
-        try:
-            clientsocket.sendall('Message received')
-        except Exception as ex:
-            print("Couldn't send back message. Error: %s" % ex)
-
-        # If leader -> invoke/send to all the task before executing
-        result = self.MajorityInvoke(requestLabel, requestData)
-
-        # Then always execute task, even if not leader
-        #...
-
-        #TODO - check if is successful, if not - send as bytes-like object
-        # and if not check if it is alive (connection)
-
-        # TODO - registerHandler and EventHandler
-        #  registerHandler(RequestLabel, EventHandler)
-
-        return result
+    def processRequest(self, SenderID, RequestLabel, RequestData):
+        ReplicaID = SenderID  # TODO - revise - use this.id when to replica id (also need to alter main)
+        Result = invoke(ReplicaID, RequestLabel, RequestData)
+        (RequestLabel, EventHandler) = Result
+        registerHandler(EventHandler, RequestLabel)
+        return Result
 
     # Clientside - only the leader will connect to all replicas and invoke messages
     def ConnectReplicas(self):
@@ -75,29 +57,28 @@ class Server:
             t = threading.Thread(target=self.replicas[i].Connect, args=())
             t.start()
 
-    def MajorityInvoke(self, requestLabel, requestData):  # TODO ------> What is requestLabel? <------
+    def MajorityInvoke(self, requestLabel, requestData):
         global results
-        results = [None] * len(self.replicas)  # Already excluding itself in the creation of the replicas
+        results = []  # [None] * len(self.replicas)  # Already excluding itself in the creation of the replicas
         t = []
         for i in range(len(self.replicas)):
-            t.append(Thread(target=self.Invoke, args=(i, requestLabel, requestData)))
+            t.append(Thread(target=self.InvokeReplica, args=(i, requestLabel, requestData)))
             t[i].start()
 
         # k = n/2 - 1
-        # We should add 1 to the number of results (because we excluded itself already) and wait to get
-        # this n/2 - 1 of results from the total n replicas
+        n = len(self.replicas) + 1  # the +1 is the current replica
+        k = n / 2 - 1
 
-        # join will always wait for all, need another method - maybe use append on the array and wait
-        # with a while cycle for there to be k number of array indexes.
-        for i in range(len(t)):  # TODO - change methodology
-            t[i].join()
+        while True:
+            if len(results) == k:
+                break
 
         return results
 
-    def Invoke(self, replicaId, requestLabel, requestData):
-        result = self.replicas[replicaId].Invoke(requestLabel, requestData)
+    def InvokeReplica(self, replicaId, requestLabel, requestData):
+        result = self.replicas[replicaId].Invoke(self.id, requestLabel, requestData)
         mutex.acquire()
-        results.insert(replicaId, result)
+        results.append(result)
         mutex.release()
         return result
 
@@ -110,3 +91,31 @@ class Server:
         for replica in self.replicas:
             replica.Dispose()
         self.socketServer.close()
+
+
+def invoke(ReplicaID, RequestLabel, RequestData):
+    if RequestLabel == "WriteString":
+        WriteString(RequestData)
+        (RequestLabel, EventHandler) = (RequestLabel, "Operation executed with Success")
+    elif RequestLabel == "ReadString":
+        _ = ReadString()
+        (RequestLabel, EventHandler) = (RequestLabel, _)
+    else:
+        (RequestLabel, EventHandler) = (RequestLabel, "Operation executed with Success")
+    return RequestLabel, EventHandler
+
+
+def registerHandler(RequestLabel, EventHandler):
+    # TODO - log
+    return
+
+
+global string
+
+
+def WriteString(string):
+    string = string
+
+
+def ReadString():
+    return string

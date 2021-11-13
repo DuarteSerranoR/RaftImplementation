@@ -1,3 +1,4 @@
+import pickle
 from socket import *
 
 
@@ -12,9 +13,9 @@ class Client:
         except:
             print("Couldn't connect to replica " + host + ":" + str(port))
 
-    def SendMessage(self, requestLabel, requestData):
+    def SendMessage(self, SenderId, requestLabel, requestData):
         # TODO - fix me
-        message = requestData  # (requestLabel, requestData) #.encode()
+        message = pickle.dumps((SenderId, requestLabel, requestData))
         print("Sending message...")
         self.socket.sendall(message)
         response = self.socket.recv(1024).decode("utf-8")
