@@ -13,8 +13,10 @@ class Server:
     socketserver: socket
     replicas: array[Replica]
     signal: bool
+    id:int
 
-    def __init__(self, replicas):
+    def __init__(self, replicas, selfId):
+        self.id = selfId
         self.signal = False
         self.replicas = replicas
         print("Starting server...")
@@ -118,4 +120,7 @@ def WriteString(string):
 
 
 def ReadString():
-    return string
+    if string:
+        return string
+    else:
+        return ""
