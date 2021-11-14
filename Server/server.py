@@ -30,7 +30,7 @@ class Server:
         self.currentTerm = 0
         self.lastLogIndex = 0
         self.timer = random.randrange(10, 15, 1)
-        time.sleep(15)  # TODO - awaits 15 seconds to start other replicas before election
+        #time.sleep(15)  # TODO - awaits 15 seconds to start other replicas before election
         print("Starting server...")
         self.socketServer = socket(AF_INET, SOCK_STREAM)
 
@@ -39,7 +39,7 @@ class Server:
         print("Binding replica's socket to " + host + ":" + str(port))
         self.socketServer.bind((host, port))
 
-    def RequestVote(self):  # TODO - change implementation as follows in the RAFT paper
+    def StartElection(self):  # TODO - change implementation as follows in the RAFT paper
         print("Requesting new Leader Election")
         self.state = "Candidate"
         connect = False
@@ -64,11 +64,14 @@ class Server:
     def AppendEntries(self):  # TODO
         term = self.currentTerm
 
-    def StartElection(self):  # TODO - delete and find different solution
+    def RequestVote(self):  # TODO
         print("Starting new Leader Election")
         self.state = "Candidate"
 
     def Listen(self):
+        #if leader:
+        if self.id == 0:
+            self.ConnectReplicas()  # TODO ---- delete and only do this for leader
         print("Server listening...")
         self.socketServer.listen(len(self.replicas) + 1)
         leader = False
@@ -88,10 +91,10 @@ class Server:
             (SenderID, RequestLabel, RequestData) = pickle.loads(message)
 
             if RequestLabel == "RequestVote":
-                self.StartElection()
+                print("election")
             else:
                 # if leader:
-                if self.id == 0: # TODO
+                if self.id == 0:  # TODO
                     Result = self.MajorityInvoke(RequestLabel, RequestData)
 
                 Result = self.processRequest(SenderID, RequestLabel, RequestData)

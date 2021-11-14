@@ -1,4 +1,3 @@
-from array import array
 from typing import List
 
 from Server.server import Server
@@ -19,5 +18,3 @@ class Network:
 
     def Dispose(self):
         self.server.Dispose()
-        for i in range(len(self.replicas)):
-            self.replicas[i].Dispose()
