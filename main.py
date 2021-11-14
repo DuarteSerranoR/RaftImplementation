@@ -11,23 +11,33 @@ replicasFile = open("replicas", "r").read().splitlines()
 replicas = []
 host = "localhost"
 port = 0
+replicaId = -1
 print("Current replicas:")
+replicaProcessed = False
 for i in range(len(replicasFile)):
     if i == int(sys.argv[1]):
         host = replicasFile[i].split(":")[0]
         port = int(replicasFile[i].split(":")[1])
-        replicasFile.pop(i)
+        replicaId = i
+        replicaProcessed = True
         continue
+    else:
+        if replicaProcessed:
+            replicas.append(Replica(i, replicasFile[i]))
+            replicas[i - 1].print()
+        else:
+            replicas.append(Replica(i, replicasFile[i]))
+            replicas[i].print()
 
-for i in range(len(replicasFile)):
-    replicas.append(Replica(i, replicasFile[i]))
-    replicas[i].print()
+#for i in range(len(replicasFile)):
+#    replicas.append(Replica(i, replicasFile[i]))
+#    replicas[i].print()
 
 # Network
 # https://docs.python.org/3.8/howto/sockets.html
 network = Network()
 try:
-    network.StartServer(replicas, host, port)
+    network.StartServer(replicas, host, port, replicaId)
 except Exception as ex:
     print("Error: %s" % ex)
 finally:

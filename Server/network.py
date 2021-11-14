@@ -1,17 +1,19 @@
 from array import array
+from typing import List
+
 from Server.server import Server
 from Models.replica import Replica
 
 
 class Network:
-    replicas: array[Replica]
+    replicas: List[Replica]
     server: Server
 
-    def StartServer(self, replicas, host, port):
+    def StartServer(self, replicas, host, port, replicaId):
         print("Hosting replica on: " + host + ":" + str(port))
 
         # server faz bind e listen
-        self.server = Server(replicas)
+        self.server = Server(replicas, replicaId)
         self.server.BindSocket(host, port)
         self.server.Listen()
 
