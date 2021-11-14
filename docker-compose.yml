@@ -1,0 +1,46 @@
+version: "3.8"
+services:
+  server-1:
+    #image: dockers.priberam.com/raft-algorithm:0.1
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    entrypoint: ["python", "/app/main.py", "0"]
+    ports:
+      - 3009:3009
+  server-2:
+    #image: dockers.priberam.com/raft-algorithm:0.1
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    #entrypoint: ["python", "/app/main.py", "1"]
+    ports:
+      - 3002:3002
+  server-3:
+    #image: dockers.priberam.com/raft-algorithm:0.1
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    #entrypoint: ["python", "/app/main.py", "2"]
+    ports:
+      - 1800:1800
+  server-4:
+    #image: dockers.priberam.com/raft-algorithm:0.1
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    #entrypoint: ["python", "/app/main.py", "3"]
+    ports:
+      - 5120:5120
+  test-1:
+    #image: dockers.priberam.com/raft-algorithm-test:0.1
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    entrypoint: ["python", "test.py"]
+  test-2:
+    #image: dockers.priberam.com/raft-algorithm-test:0.1
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    entrypoint: ["python", "test.py"]
