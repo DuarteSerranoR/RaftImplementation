@@ -17,26 +17,21 @@ class Client:
             self.port = port
 
     def SendMessage(self, SenderId, requestLabel, requestData):
-        # TODO - fix me
         message = pickle.dumps((SenderId, requestLabel, requestData))
         print("Sending message...")
 
-        #try:
         self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.connect((self.host, self.port))
         self.socket.sendall(message)
-        '''
-        except:
-            self.socket = socket(AF_INET, SOCK_STREAM)
-            self.socket.connect((self.host, self.port))
-            self.socket.sendall(message)
-        '''
-
         response = self.socket.recv(65536)
         self.socket.close()
+
         print("Got replica's response " + str(response))
         return response
 
     def Dispose(self):
-        self.socket.close()
-        self.alive = False
+        if self.alive:
+            try:
+                self.socket.close()
+            finally:
+                self.alive = False

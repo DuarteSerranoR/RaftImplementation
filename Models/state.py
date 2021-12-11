@@ -5,20 +5,19 @@ import time
 class State:
     id: int
     state: str
-    time: float
+    time: int
     timer: float
-    LostHeartbeat: bool
     currentTerm: int  # TODO
     lastLogIndex: int  # TODO
     leader: int
 
     def __init__(self, id):
         self.id = id
+        self.state = "Candidate"
+        self.currentTerm = 0
         self.lastLogIndex = 0
-        self.LostHeartbeat = False
 
     def ChangeState(self, state):
-        self.state = state
         if state == "Follower":
             print("Elected Follower")
             self.currentTerm = 0
@@ -27,14 +26,26 @@ class State:
         elif state == "Leader":
             print("Elected Leader")
             self.currentTerm = 0
-            self.time = 0
+
+            # To reelect a leader
+            self.time = random.randrange(320, 640)
+            self.timer = time.time()
         else:
             print("Starting Election")
+        self.state = state
 
     def CheckBeatTimer(self):
-        if self.time > time.time() - self.timer:
-            self.time = random.randrange(10, 15, 1)
-            self.timer = time.time()
+        now = time.time()
+        secDif = now - self.timer
+        if float(self.time) > secDif:
+            return False
+        else:
+            return True
+
+    def ReElectionTimer(self):
+        now = time.time()
+        secDif = now - self.timer
+        if float(self.time) > secDif:
             return False
         else:
             return True

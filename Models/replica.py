@@ -25,5 +25,9 @@ class Replica:
     def Invoke(self, SenderId, requestLabel, requestData):
         return self.client.SendMessage(SenderId, requestLabel, requestData)
 
+    def Reconnect(self):
+        if not self.client.alive:
+            self.client.Dispose()
+
     def Dispose(self):
         self.client.Dispose()

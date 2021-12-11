@@ -3,7 +3,7 @@ import time
 from socket import *
 
 host = 'localhost'
-port = 3009
+port = 5120
 sckt = socket(AF_INET, SOCK_STREAM)
 
 SenderId = -1
