@@ -29,12 +29,7 @@ for i in range(len(replicasFile)):
             replicas.append(Replica(i, replicasFile[i]))
             replicas[i].print()
 
-#for i in range(len(replicasFile)):
-#    replicas.append(Replica(i, replicasFile[i]))
-#    replicas[i].print()
-
 # Network
-# https://docs.python.org/3.8/howto/sockets.html
 network = Network()
 try:
     network.StartServer(replicas, host, port, replicaId)
