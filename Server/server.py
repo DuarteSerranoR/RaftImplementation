@@ -8,6 +8,7 @@ from threading import Thread
 from Models.state import State
 from Models.replica import Replica
 from Models.requests import registerHandler
+from Models.logger import Logger
 
 global results
 mutex = threading.Lock()
@@ -20,14 +21,17 @@ class Server:
     id: int
     state: State
     stopConnection: bool
+    logger: Logger
 
-    def __init__(self, replicas, selfId):
+    def __init__(self, replicas, selfId, arg):
         self.id = selfId
         self.signal = True
         self.replicas = replicas
         self.state = State(selfId)
         self.state.ChangeState("Candidate")
         self.stopConnection = False
+        self.logger = Logger(arg)
+        self.state.lastLogIndex = self.logger.index()
         print("Starting server...")
         self.socketServer = socket(AF_INET, SOCK_STREAM)
 
@@ -36,12 +40,20 @@ class Server:
         print("Binding replica's socket to " + host + ":" + str(port))
         self.socketServer.bind((host, port))
 
-    def AppendEntries(self):  # TODO
-        # mutex acquire
-        term = self.state.currentTerm
-        # log
-        self.state.lastLogIndex += 1
-        # mutex release
+    def AppendEntries(self):
+        index = self.state.lastLogIndex
+        leader = self.state.leader
+        entriesData = self.replicas[leader].Invoke(self.id, "Append Entries", str(index))
+        entries = pickle.loads(entriesData)
+        for entrie in entries:
+            (Id, timestamp, replicaId, label, data) = entrie
+            registerHandler(label, data)
+            self.logger.log(self.id, entrie.label, entrie.data)
+            self.state.lastLogIndex += 1
+            self.state.currentTerm += 1
+
+    def GetEntries(self, index):
+        return self.logger.get_logs(index)
 
     def Listen(self):
         print("Server listening...")
@@ -58,10 +70,12 @@ class Server:
                 else:
                     (SenderID, RequestLabel, RequestData) = pickle.loads(message)
 
-                # if self.state.state == "Candidate" and RequestLabel != "Start Election" and RequestLabel != "Set Leader":
-                #     response = pickle.dumps("Leader election")
-                #     clientsocket.sendall(response)
-                if RequestLabel == "Start Election" and self.state.state == "Candidate":
+                if RequestLabel == "Append Entries":
+                    index = int(RequestData)
+                    entries = self.GetEntries(index)
+                    response = pickle.dumps(entries)
+                    clientsocket.sendall(response)
+                elif RequestLabel == "Start Election" and self.state.state == "Candidate":
                     self.stopConnection = True
                     response = pickle.dumps((self.id, self.state.currentTerm, self.state.lastLogIndex))
                     clientsocket.sendall(response)
@@ -76,6 +90,7 @@ class Server:
                         self.state.ChangeState("Leader")
                     else:
                         self.state.ChangeState("Follower")
+                        self.AppendEntries()
                     response = pickle.dumps("Leader Set")
                     clientsocket.sendall(response)
                 elif RequestLabel == "Heartbeat":
@@ -108,7 +123,7 @@ class Server:
                     bestLogIndex = self.state.lastLogIndex
                     for result in replicas:
                         (replicaId, currentTerm, lastLogIndex) = pickle.loads(result)
-                        if lastLogIndex > bestLogIndex and bestCurrentTerm == currentTerm:  # TODO - revise
+                        if lastLogIndex > bestLogIndex and currentTerm > bestCurrentTerm:
                             leaderId = replicaId
                     self.MajorityInvoke(self.id, "Set Leader", leaderId)
                     self.state.leader = leaderId
@@ -162,10 +177,21 @@ class Server:
             try:
                 self.MajorityInvoke(ReplicaID, RequestLabel, RequestData)
                 selfResult = registerHandler(RequestLabel, RequestData)
+                self.logger.log(self.id, RequestLabel, RequestData)
+                self.state.lastLogIndex += 1
+                self.state.currentTerm += 1
             except Exception as ex:
                 selfResult = "Error: %s" % ex
+                self.LeaderElection(False)
         else:
-            selfResult = registerHandler(RequestLabel, RequestData)
+            try:
+                selfResult = registerHandler(RequestLabel, RequestData)
+                self.logger.log(self.id, RequestLabel, RequestData)
+                self.state.lastLogIndex += 1
+                self.state.currentTerm += 1
+            except Exception as ex:
+                selfResult = "Error: %s" % ex
+                self.AppendEntries()
 
         return selfResult
 
@@ -181,50 +207,54 @@ class Server:
                 numConnected += 1
         sleep(1)
         # k = n/2 - 1
-        n = len(self.replicas)  # + 1  # the +1 is the current replica
-        k = n / 2  # + 1
-        if numConnected <= k:
+        n = len(self.replicas) + 1  # the +1 is the current replica
+        n = (n / 2)
+        k = n + 1
+        if numConnected <= k and not self.stopConnection:
             numConnected = 0
             for replica in self.replicas:
                 if replica.Alive():
                     numConnected += 1
 
             # k = n/2 + 1
-            n = len(self.replicas)  # + 1  # the +1 is the current replica
-            k = (n / 2) + 1
+            n = len(self.replicas) + 1  # the +1 is the current replica
+            n = (n / 2)
+            k = n + 1
             if numConnected <= k and not self.stopConnection:
                 for i in range(len(self.replicas)):
                     self.replicas[i].Reconnect()
                     self.ConnectReplicas()
             elif self.stopConnection:
                 self.DisconnectReplicas()
+        elif self.stopConnection:
+            self.DisconnectReplicas()
 
     def invoke(self, replicaNum, replicaId, requestLabel, requestData):
         global results
         try:
-            result = self.replicas[replicaNum].Invoke(replicaId, requestLabel, requestData)
+            result = self.replicas[replicaNum].Invoke(self.id, requestLabel, requestData)
             mutex.acquire()
             results.append(result)
             mutex.release()
         except Exception as ex:
-            print("Replica num " + str(replicaId + 1) + " didn't respond. Exception: %s", ex)
+            print("Replica num " + str(replicaId) + " didn't respond. Exception: %s", ex)
 
     def MajorityInvoke(self, replicaId, requestLabel, requestData):
         global results
         results = []  # [None] * len(self.replicas)  # Already excluding itself in the creation of the replicas
         t = []
         for i in range(len(self.replicas)):
-            t.append(Thread(target=self.invoke, args=(i, replicaId, requestLabel, requestData)))
+            t.append(Thread(target=self.invoke, args=(i, i, requestLabel, requestData)))
             t[i].start()
 
         # k = n/2 - 1
-        n = len(self.replicas)  # + 1  # the +1 is the current replica
-        k = (n / 2) + 1
-
-        timeoutSecs = 40
+        n = len(self.replicas)  # the +1 is the current replica
+        n = n / 2
+        k = int(n - 0.1) + 1
+        timeoutSecs = 10
         start = time()
         while True:
-            if len(results) >= k:
+            if len(results) + 1 >= k:
                 break
             elif timeoutSecs < time() - start:
                 raise Exception("Majority not achieved")

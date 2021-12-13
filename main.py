@@ -32,7 +32,7 @@ for i in range(len(replicasFile)):
 # Network
 network = Network()
 try:
-    network.StartServer(replicas, host, port, replicaId)
+    network.StartServer(replicas, host, port, replicaId, sys.argv[2])
 except Exception as ex:
     print("Error: %s" % ex)
 finally:

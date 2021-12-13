@@ -8,11 +8,11 @@ class Network:
     replicas: List[Replica]
     server: Server
 
-    def StartServer(self, replicas, host, port, replicaId):
+    def StartServer(self, replicas, host, port, replicaId, arg):
         print("Hosting replica on: " + host + ":" + str(port))
 
         # server faz bind e listen
-        self.server = Server(replicas, replicaId)
+        self.server = Server(replicas, replicaId, arg)
         self.server.BindSocket(host, port)
         self.server.Listen()
 

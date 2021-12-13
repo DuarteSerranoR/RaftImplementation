@@ -1,17 +1,25 @@
+import threading
+from time import sleep
+
+
 def registerHandler(RequestLabel, RequestData):
-    # TODO - log
     if RequestLabel == "WriteString":
         WriteString(RequestData)
         (RequestLabel, EventHandler) = (RequestLabel, "Operation executed with Success")
     elif RequestLabel == "ReadString":
         _ = ReadString()
         (RequestLabel, EventHandler) = (RequestLabel, _)
+    elif RequestLabel == "Increment":
+        _ = Increment()
+        (RequestLabel, EventHandler) = (RequestLabel, _)
     else:
         (RequestLabel, EventHandler) = (RequestLabel, "Operation executed with Success")
-    return RequestLabel, EventHandler  # TODO - 1 handler for each request label or 1 for all (different file) -> this will
+    return RequestLabel, EventHandler
 
 
 global string
+global integer
+mutexIncrement = threading.Lock()
 
 
 def WriteString(inputString):
@@ -25,3 +33,17 @@ def ReadString():
         return string
     else:
         return ""
+
+
+def Increment():
+    global integer
+    mutexIncrement.acquire()
+    sleep(0.01)
+    try:
+        if integer is None:
+            integer = 0
+    except:
+        integer = 0
+    integer += 1
+    mutexIncrement.release()
+    return integer

@@ -15,7 +15,6 @@ class State:
         self.id = id
         self.state = "Candidate"
         self.currentTerm = 0
-        self.lastLogIndex = 0
 
     def ChangeState(self, state):
         if state == "Follower":
@@ -53,11 +52,3 @@ class State:
     def Beat(self):
         self.time = random.randrange(10, 15, 1)
         self.timer = time.time()
-
-    #def ManageState(self):
-    #    #while self.running:
-    #    if self.state == "Candidate":
-    #        self.election = True
-    #    elif self.state == "Leader":
-    #        AppendEntries()
-
