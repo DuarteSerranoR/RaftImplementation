@@ -22,6 +22,10 @@ Project for Fault Tolerance in Distributed Systems - Lib developed for learning.
 <h2>Other installation and Usage instructions</h2>
 <p>To launch the application, with all the pre-requisites checked out,
 You only run the main.py with the following arguments:</p>
-```main.py {number of the replica starting at index 0} {program name passed to the database creation}```
+```sh
+main.py {number of the replica starting at index 0} {program name passed to the database creation}
+```
 <p>Following this logic, for the replica 0, with the database raft0-raft-logs, you run:</p>
-```main.py 0 raft0```
+```sh
+main.py 0 raft0
+```
