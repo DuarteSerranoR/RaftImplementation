@@ -1,12 +1,15 @@
-FROM python:3.8
+FROM postgres:9.4
+ARG DB_NAME
 WORKDIR /app
 
+COPY dbsetup.sh ./dbsetup.sh
+RUN ./dbsetup.sh $DB_NAME
+
 COPY main.py ./main.py
-COPY replicas ./replicas
-COPY requests ./requests
-COPY state ./state
+COPY DB ./DB
 COPY Models ./Models
 COPY Server ./Server
+COPY replicas ./replicas
 
 # COPY test.py ./test.py
 

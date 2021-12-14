@@ -7,8 +7,8 @@ class State:
     state: str
     time: int
     timer: float
-    currentTerm: int  # TODO
-    lastLogIndex: int  # TODO
+    currentTerm: int
+    lastLogIndex: int
     leader: int
 
     def __init__(self, id):

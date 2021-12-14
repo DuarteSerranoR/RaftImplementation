@@ -103,10 +103,12 @@ class Server:
                     print(str(SenderID) + "," + RequestLabel + "," + RequestData)
                     response = pickle.dumps(Result)
                     clientsocket.sendall(response)
+                clientsocket.close()
             except Exception as ex:
                 print("Fatal error -> %s" % ex)
 
     def LeaderElection(self, firstConnect):
+        sleep(self.id)
         self.stopConnection = False
         if self.state.state == "Leader":
             self.DisconnectReplicas()

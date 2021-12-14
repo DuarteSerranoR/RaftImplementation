@@ -32,4 +32,3 @@ You only run the main.py with the following arguments:</p>
    ```sh
    main.py 0 raft0
    ```
-
