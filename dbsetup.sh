@@ -10,3 +10,5 @@ psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL
 EOSQL
 ||
 echo "DB could not be created"
+
+#// TODO - do this through pgsql dataabase docker container
