@@ -1,0 +1,22 @@
+[0]
+host="localhost"
+port=2001
+
+[1]
+host="localhost"
+port=1231
+
+[2]
+host="localhost"
+port=3231
+
+[3]
+host="localhost"
+port=2312
+
+[4]
+host="localhost"
+port=1234
+
+# pass to sqlite?
+# append replicas dynamicaly?

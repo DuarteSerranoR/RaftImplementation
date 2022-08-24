@@ -10,7 +10,7 @@ type Replica struct {
 }
 
 func LoadReplicas(path string) []Replica {
-	b, _ := ioutil.ReadFile("../replicas")
+	b, _ := ioutil.ReadFile("./replicas")
 	// TODO - catch err
 	s := string(b)
 	print(s)
